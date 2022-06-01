@@ -1,2 +1,2 @@
-# EFID_EBO
- Evolutionary Fuzzy Influence Diagrams for Effects Based Operations
+# EFID_EBO - Evolutionary Fuzzy Influence Diagrams for Effects-Based-Operations
+Work in progress repository for my master's thesis research on using fuzzy logic and cognitive processing with knowledge graphs to develop AI solutions to effects-based-operations planning environments. The system will use a genetic algorithm based solver to answer source-determination queries to a self-designed fuzzy inluence diagram. Further information on the foundation of this work is available on request via the contact form on my personal website [zphill.com](zphill.com)
