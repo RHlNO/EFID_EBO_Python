@@ -1,13 +1,13 @@
-from genalg import Species, Chromosome
+from genalg import Species
 from matplotlib import pyplot as plt
-import time
+import numpy as np
 
-def fitness(inGenes: list):
-    score =  sum([-abs(gene-0.5) for gene in inGenes])
+def fitness(inGenes: list, addtl_args):
+    score =  np.mean([-(gene-0.5)**2 for gene in inGenes])
     return score
 
 if __name__ == '__main__':
-    myspecies = Species(fitness, 2, pop=100, mutate=0.4)
+    myspecies = Species(10, fitness, pop=200)
 
     fits = []
 

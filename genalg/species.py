@@ -25,14 +25,16 @@ class Species:
         Advances the genetic species one generation and returns best chromosome
     """
 
-    def __init__(self, fitfunc: Callable, chromSize: int, pop=200, cross=0.5, mutate=0.1, elite=0.05):
+    def __init__(self, chromSize: int, fitfunc: Callable, fitargs: list=None, pop=200, cross=0.8, mutate=0.1, elite=0.05):
         """
         Parameters
         ----------
-        fitfunc : Callable
-            Function that takes a chromosome argument and returns a float fitness value to be maximized by the GA
         chromSize : int
             Numer of genes per individual chromosome in the species
+        fitfunc : Callable
+            Function that takes a chromosome argument and returns a float fitness value to be maximized by the GA
+        fitargs : list
+            List of additional arguments that will be passed to user defined fitness function
         pop = 200 : int
             Number of individual chromosomes per generation in the species
         cross : float
@@ -42,8 +44,9 @@ class Species:
         elite : float
             (0-1) input of the percent rate at which elitism of chromosomes occurs
         """
-
+        self.chromSize = chromSize
         self.fitfunc = fitfunc
+        self.fitargs = fitargs
         self.crossover_rate = cross
         self.mutation_rate = mutate
         self.elitism_rate = elite
@@ -51,7 +54,8 @@ class Species:
         # Generate initial set of chromosomes
         self.population = []
         for idx in range(pop):
-            self.population.append(Chromosome(self.fitfunc, chromSize))
+            self.population.append(self.newChrom())
+            self.population[-1].calcFitness()
 
         # Sort initial set by fitness
         self.population.sort(key=attrgetter('fitness'))
@@ -90,19 +94,21 @@ class Species:
         for idx in range(numElite, len(self.population)):
 
             # Selection: Get two parents for new chromosome
-            p1 = self.selectparent(parent_odds)
-            p2 = self.selectparent(parent_odds)
-            while p1 == p2:  # Loop to ensure no duplicate parents selected
-                p2 = self.selectparent(parent_odds)
+            parents =  [None, None]
+            parents[0] = self.selectparent(parent_odds)
+            parents[1] = self.selectparent(parent_odds)
+            while parents[0] == parents[1]:  # Loop to ensure no duplicate parents selected
+                parents[1] = self.selectparent(parent_odds)
+            parents.sort(key=attrgetter('fitness'))
 
             # Crossover: Supply child with crossover genes from parents
-            child = Chromosome(self.fitfunc, len(p2.genes))  # initialize child
+            child = self.newChrom()  # initialize child
             for idx in range(len(child.genes)):
                 rv = random.random()
                 if rv < self.crossover_rate:
-                    child.genes[idx] = p2.genes[idx]
+                    child.genes[idx] = parents[1].genes[idx]
                 else:
-                    child.genes[idx] = p1.genes[idx]
+                    child.genes[idx] = parents[0].genes[idx]
 
             # Mutation: Chance to generate new randomized gene for each gene in chromosome
             for idx in range(len(child.genes)):
@@ -113,8 +119,14 @@ class Species:
             # Add child to new population
             newpop.append(child)
 
+        # Update fitness of population individuals
+        for chrom in newpop:
+            chrom.calcFitness()
+
         # Update population with fitness-sorted new generation population
         self.population = sorted(newpop, key=attrgetter('fitness'))
+
+        # Get best chromosome from population
         self.bestChrom = self.population[-1]
 
         # Print generation statistics if verbose is True
@@ -133,3 +145,7 @@ class Species:
             if rv < odds:
                 return self.population[idx]
         raise RuntimeError('Parent selection failed to find matching parent in oddslist.')
+
+    def newChrom(self):
+        # Generate new chromosome matching species parameters
+        return Chromosome(self.chromSize, self.fitfunc, self.fitargs)
