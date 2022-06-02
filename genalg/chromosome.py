@@ -1,5 +1,7 @@
 import random
 
+# TODO: CONVERT TO NUMPY ARRAY AND LOGICAL INDEXING AND CHECK PERFORMANCE IMPROVEMENT
+
 
 class Chromosome:
 
@@ -11,4 +13,4 @@ class Chromosome:
     def calcFitness(self):
         self.fitness = self.fitfunc(self.genes, self.fitargs)
 
-    # TODO add parent/child and mutant tracking for visualization or analysis of gene transfer
+    # TODO: add parent/child and mutant tracking for visualization or analysis of gene transfer

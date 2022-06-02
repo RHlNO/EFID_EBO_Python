@@ -6,6 +6,9 @@ import math
 import numpy as np
 from .chromosome import Chromosome
 
+# TODO: CONVERT TO NUMPY ARRAY AND LOGICAL INDEXING AND CHECK PERFORMANCE IMPROVEMENT
+# TODO: ADD GENERATION HISTORY
+
 
 class Species:
     """
@@ -25,7 +28,10 @@ class Species:
         Advances the genetic species one generation and returns best chromosome
     """
 
-    def __init__(self, chromSize: int, fitfunc: Callable, fitargs: list=None, pop=200, cross=0.8, mutate=0.1, elite=0.05):
+    def __init__(self, chromSize: int,
+                 fitfunc: Callable,
+                 fitargs: tuple = None,
+                 pop=200, cross=0.8, mutate=0.1, elite=0.05):
         """
         Parameters
         ----------
@@ -80,7 +86,7 @@ class Species:
         fits = [(ftns-min(fits))/np.ptp(fits) for ftns in fits]  # Normalize fitnesses from 0 to 1
         sumfits = sum(fits)
         for fitness in fits:
-            try:
+            try:  # construct cumulative selection probability distribution
                 parent_odds.append(fitness/sumfits + parent_odds[-1])
             except IndexError:
                 parent_odds.append(fitness/sumfits)
@@ -94,7 +100,7 @@ class Species:
         for idx in range(numElite, len(self.population)):
 
             # Selection: Get two parents for new chromosome
-            parents =  [None, None]
+            parents = [None, None]
             parents[0] = self.selectparent(parent_odds)
             parents[1] = self.selectparent(parent_odds)
             while parents[0] == parents[1]:  # Loop to ensure no duplicate parents selected
@@ -120,8 +126,11 @@ class Species:
             newpop.append(child)
 
         # Update fitness of population individuals
+        t_fitcalc = []
         for chrom in newpop:
+            t_prefit = time.perf_counter()
             chrom.calcFitness()
+            t_fitcalc.append(time.perf_counter()-t_prefit)
 
         # Update population with fitness-sorted new generation population
         self.population = sorted(newpop, key=attrgetter('fitness'))
@@ -132,7 +141,7 @@ class Species:
         # Print generation statistics if verbose is True
         t_gen = time.perf_counter() - t_start
         if verbose:
-            buf = 'Generation time: %f  |  Best fitness: %f' % (t_gen, self.bestChrom.fitness)
+            buf = 'Generation time: %f  |  Best fitness: %f  |  Mean fitness calculation time: %f' % (t_gen, self.bestChrom.fitness, np.mean(t_fitcalc))
             print(buf)
 
         return self.bestChrom, self.bestChrom.fitness  # Return best individual and fitness of the best elite
